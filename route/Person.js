@@ -35,16 +35,26 @@ router.get('/all',async(req,res)=>{
 router.get('/:_Name', async (req, res) => {
     try {
         const name = req.params._Name;
-        
-        const person = await Person.find({ Name: name });
-               
+
+        // Recherche d'une personne par son nom
+        const person = await Person.findOne({ Name: name });
+
+        // Vérification si une personne est trouvée
+        if (!person) {
+            return res.status(404).send({ 
+                msg: `No person found with the name: ${name}` 
+            });
+        }
+
         // Envoie la personne trouvée en réponse
-        res.status(200).send({ msg: 'Person found',personne:person});
+        res.status(200).send({msg: 'Person found',person: person});
     } catch (error) {
+        console.error(error);
         // En cas d'erreur, envoie une réponse avec le message d'erreur
-        res.status(400).send({ msg: 'Cannot find person'});
+        res.status(500).send({msg: 'An unexpected error occurred', error: error.message});
     }
-})
+});
+
 
 
 
@@ -56,15 +66,34 @@ router.get('/:_Name', async (req, res) => {
 
 router.get('/favfood/:_favoriteFoods', async (req, res) => {
     try {
-        // Récupérer l'aliment spécifique
+        // Récupérer l'aliment spécifique depuis les paramètres de la requête
         const favoriteFood = req.params._favoriteFoods;
-        const person = await Person.find({ favoriteFood: favoriteFood });
-     
-        res.status(200).send({ msg: 'Person found', person:person });
+
+        // Rechercher les personnes ayant cet aliment dans leur liste de 'favoriteFoods'
+        const people = await Person.find({ favoriteFoods: favoriteFood });
+
+        // Vérifier si des personnes sont trouvées
+        if (!people || people.length === 0) {
+            return res.status(404).send({ 
+                msg: `No persons found who like ${favoriteFood}` 
+            });
+        }
+
+        // Retourner les personnes trouvées
+        res.status(200).send({ 
+            msg: `Persons found who like ${favoriteFood}`, 
+            data: people 
+        });
     } catch (error) {
-        res.status(400).send({ msg: 'Cannot find person', error: error.message });
+        console.error(error);
+        // En cas d'erreur, envoyer une réponse avec le message d'erreur
+        res.status(500).send({ 
+            msg: 'An error occurred', 
+            error: error.message 
+        });
     }
 });
+
 
 
         // Cherche une personne dans la base de données par _id
